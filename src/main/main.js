@@ -28,7 +28,7 @@ import {stages} from "stages/stages";
 import {runAI} from "main/ai";
 import {physics} from "physics/physics";
 import $ from 'jquery';
-import {controllerIDNumberFromGamepadID, controllerNameFromIDnumber, axis, button, gpdaxis, gpdbutton, keyboardMap, controllerMaps, scaleToMeleeAxes, scaleToGCTrigger, custcent} from "main/input";
+import {controllerIDNumberFromGamepadID, controllerNameFromIDnumber, axis, button, gpdaxis, gpdbutton, keyboardMap, controllerMaps, scaleToUnitAxes, scaleToMeleeAxes, scaleToGCTrigger, custcent} from "main/input";
 /*globals performance*/
 
 export const player = [0,0,0,0];
@@ -565,7 +565,6 @@ window.interpretInputs = function(i, active) {
   function buttonData (gpd, but) {
     return gpdbutton (gpd, mType[i], but);
   };
-
   if (mType[i] == 10) {
     // keyboard controls
     var stickR = 1;
@@ -629,12 +628,11 @@ window.interpretInputs = function(i, active) {
                                      custcent[i].cs.x,
                                      custcent[i].cs.y);
     [player[i].inputs.rawlStickAxis[0].x,player[i].inputs.rawlStickAxis[0].y] =
-                  scaleToMeleeAxes ( axisData(gamepad,"lsX"),
-                                     axisData(gamepad,"lsY"),
-                                     mType[i],
-                                     false, // false: no deadzones
-                                     custcent[i].ls.x,
-                                     custcent[i].ls.y);
+                  scaleToUnitAxes ( axisData(gamepad,"lsX"),
+                                    axisData(gamepad,"lsY"),
+                                    mType[i],
+                                    custcent[i].ls.x,
+                                    custcent[i].ls.y);
     var lstickX = lsticks[0];
     var lstickY = lsticks[1];
     var cstickX = csticks[0];
@@ -645,20 +643,20 @@ window.interpretInputs = function(i, active) {
       //-custcent[i].l
       //-custcent[i].r
       // FOR XBOX CONTROLLERS
-      var lAnalog = scaleToGCTrigger(axisData(gamepad,"lA").value, 0.2-custcent[i].l, 1); // shifted by +0.2
-      var rAnalog = scaleToGCTrigger(axisData(gamepad,"rA").value, 0.2-custcent[i].r, 1); // shifted by +0.2
+      var lAnalog = scaleToGCTrigger(buttonData(gamepad,"l").value, 0.2-custcent[i].l, 1); // shifted by +0.2
+      var rAnalog = scaleToGCTrigger(buttonData(gamepad,"r").value, 0.2-custcent[i].r, 1); // shifted by +0.2
     }
     else if (mType[i] == 2){
-      var lAnalog = scaleToGCTrigger(axisData(gamepad,"lA"),0.867-custcent[i].l, -1); // shifted by +0.867, flipped
-      var rAnalog = scaleToGCTrigger(axisData(gamepad,"rA"),0.867-custcent[i].r, -1); // shifted by +0.867, flipped
+      var lAnalog = scaleToGCTrigger(axisData(gamepad,"lA"),0.867-custcent[i].l, -0.6); // shifted by +0.867, flipped
+      var rAnalog = scaleToGCTrigger(axisData(gamepad,"rA"),0.867-custcent[i].r, -0.6); // shifted by +0.867, flipped
     }
     else if (mType[i] == 7) { //Brook adapter has no L/R analog information, just light presses
       var lAnalog = gamepad.buttons[6].pressed ? 0.3 : 0;
       var rAnalog = gamepad.buttons[7].pressed ? 0.3 : 0;
     }
     else {
-      var lAnalog = scaleToGCTrigger(axisData(gamepad,"lA"),0.867-custcent[i].l, 1); // shifted by +0.867
-      var rAnalog = scaleToGCTrigger(axisData(gamepad,"rA"),0.867-custcent[i].r, 1); // shifted by +0.867
+      var lAnalog = scaleToGCTrigger(axisData(gamepad,"lA"),0.867-custcent[i].l, 0.6); // shifted by +0.867
+      var rAnalog = scaleToGCTrigger(axisData(gamepad,"rA"),0.867-custcent[i].r, 0.6); // shifted by +0.867
     }
   }
 
@@ -740,10 +738,16 @@ window.interpretInputs = function(i, active) {
       player[i].inputs.y[0] = buttonData(gamepad,"y").pressed;
       if (mType[i] == 3) {
         // FOR XBOX CONTROLLERS
-        player[i].inputs.r[0] = buttonData(gamepad,"r").value == 1 ? true : false;
-        player[i].inputs.l[0] = buttonData(gamepad,"l").value == 1 ? true : false;
+        player[i].inputs.r[0] = buttonData(gamepad,"r").value > 0.95 ? true : false;
+        player[i].inputs.l[0] = buttonData(gamepad,"l").value > 0.95 ? true : false;
 
         // 4 is lB, 5 is RB
+        if (gamepad.buttons[4].pressed) {
+          player[i].inputs.l[0] = true;
+        }
+      } else if (mType[i] == 9) { // Rock Candy controller
+        player[i].inputs.r[0] = axisData(gamepad,"rA").value > 0.95 ? true : false;
+        player[i].inputs.l[0] = axisData(gamepad,"lA").value > 0.95 ? true : false;
         if (gamepad.buttons[4].pressed) {
           player[i].inputs.l[0] = true;
         }
@@ -751,10 +755,18 @@ window.interpretInputs = function(i, active) {
         player[i].inputs.r[0] = buttonData(gamepad,"r").pressed;
         player[i].inputs.l[0] = buttonData(gamepad,"l").pressed;
       }
-      player[i].inputs.dpadleft[0]  = buttonData(gamepad,"dl").pressed;
-      player[i].inputs.dpaddown[0]  = buttonData(gamepad,"dd").pressed;
-      player[i].inputs.dpadright[0] = buttonData(gamepad,"dr").pressed;
-      player[i].inputs.dpadup[0]    = buttonData(gamepad,"du").pressed;
+      if (mType[i] == 9) { // Rock Candy controller, parameters to be confirmed
+        player[i].inputs.dpadleft[0]  = gamepad.axes[6] < -0.5 ? true : false;
+        player[i].inputs.dpadright[0] = gamepad.axes[6] >  0.5 ? true : false;
+        player[i].inputs.dpaddown[0]  = gamepad.axes[7] >  0.5 ? true : false;
+        player[i].inputs.dpadup[0]    = gamepad.axes[7] < -0.5 ? true : false;
+      }
+      else {
+        player[i].inputs.dpadleft[0]  = buttonData(gamepad,"dl").pressed;
+        player[i].inputs.dpaddown[0]  = buttonData(gamepad,"dd").pressed;
+        player[i].inputs.dpadright[0] = buttonData(gamepad,"dr").pressed;
+        player[i].inputs.dpadup[0]    = buttonData(gamepad,"du").pressed;
+      }
     }
 
     if (!frameByFrame) {

@@ -45,14 +45,18 @@ export const keyboardMap = [
 const mayflashMap    = [ 1, 2, 0, 3, 7, 5 , 4 , 9, 12, 13, 14, 15,  0,   1,   5,   2,  3,  4  ]; // ID 0, Mayflash Wii U 4-way adapter, NEXILUX adapter
 const vJoyMap        = [ 0, 1, 2, 3, 4, 5 , 6 , 7, 8 , 11, 9 , 10,  0,   1,   3,   4,  2,  5  ]; // ID 1, vJoy
 const raphnetV2_9Map = [ 4, 3, 2, 1, 7, 6 , 5 , 0, 8 , 10, 9 , 11,  0,   1,   3,   4,  5,  6  ]; // ID 2, raphnet v.2.9 N64 adapter
-const xbox360Map     = [ 0, 2, 1, 3, 5, 7 , 6 , 9, 12, 15, 13, 14,  0,   1,   2,   3,  6,  7  ]; // ID 3, XBOX 360 (XInput Standard Gamepad)
+const xbox360Map     = [ 0, 1, 2, 3, 5, 7 , 6 , 9, 12, 15, 13, 14,  0,   1,   2,   3,  6,  7  ]; // ID 3, Xbox 360 (XInput Standard Gamepad)
 const tigergameMap   = [ 0, 1, 2, 3, 6, 5 , 4 , 7, 11, 9 , 10, 8 ,  0,   1,   2,   3,  5,  4  ]; // ID 4, TigerGame 3-in-1 adapter
 const retrolinkMap   = [ 2, 3, 1, 0, 6, 5 , 4 , 9, 10, 11, 8 , 7 ,  0,   1,   2,   5,  3,  4  ]; // ID 5, Retrolink adapter
 const raphnetV3_2Map = [ 0, 1, 7, 8, 2, 5 , 4 , 3, 10, 13, 11, 12,  0,   1,   3,   4,  5,  2  ]; // ID 6, Raphnet v 3.2,3.3
 const brookMap       = [ 0, 1, 2, 3, 4, 10, 11, 8, 12, 15, 13, 14,  0,   1,   2,   5,  3,  4  ]; // ID 7, Brook adapter (d-pad values might be wrong, user had broken d-pad)
+const ps4Map         = [ 1, 0, 2, 3, 5, 7 , 6 , 9, 12, 15, 13, 14,  0,   1,   2,   5,  3,  4  ]; // ID 8, PS4 controller
+const rockx360Map    = [ 0, 1, 2, 3, 5, 4 , 4 , 7, 12, 15, 13, 14,  0,   1,   3,   4,  2,  5  ]; // ID 9, Rock Candy Xbox 360 controller (d-pad are axes not buttons; axes to be confirmed)
+                    //   a  b  x  y  z  r   l   s  du  dr  dd  dl  lsX  lsY  csX  csY  lA  rA
+// ID number 10 reserved for keyboard
 
-export const controllerMaps = [mayflashMap, vJoyMap, raphnetV2_9Map, xbox360Map, tigergameMap, retrolinkMap, raphnetV3_2Map, brookMap];
 
+export const controllerMaps = [mayflashMap, vJoyMap, raphnetV2_9Map, xbox360Map, tigergameMap, retrolinkMap, raphnetV3_2Map, brookMap, ps4Map, rockx360Map];
 
 // Checking gamepad inputs are well defined
 export function gpdaxis ( gpd, gpdID, ax ) { // gpd.axes[n] but checking axis index is in range
@@ -150,28 +154,51 @@ controllerIDMap.set("289b-001d", 6);
 controllerIDMap.set("Wii U GameCube Controller Adapter", 7);
 controllerIDMap.set("0e8f-0003", 7);
 
+// ID 8, PS4 controller
+controllerIDMap.set("Wireless Controller", 8); // should check ID and vendor...
+controllerIDMap.set("054c-05c4", 8);
+
+// ID 9, Rock Candy Xbox 360 controller
+controllerIDMap.set("Performance Designed Products Rock Candy Gamepad for Xbox 360", 8);
+controllerIDMap.set("0e6f-011f", 8);
+
 //--END OF CONTROLLER IDs-------------------------------------
     
 
 export function controllerNameFromIDnumber(number) {
-  if (number === 0) {
-    return "Mayflash Wii-U adapter";
-  } else if (number === 1) {
-    return "vJoy";
-  } else if (number == 2) {
-    return "raphnet v2.9 N64 adapter";
-  } else if (number == 3) {
-    return "XBOX 360 compatible controller";
-  } else if (number === 4) {
-    return "TigerGame 3-in-1";
-  } else if (number == 5) {
-    return "Retrolink adapter";
-  } else if (number == 6) {
-    return "raphnet v3.2+ N64 adapter";
-  } else if (number == 7) {
-    return "Brook adapter";
-  } else {
-    return "error: controller detected but not supported";
+  switch (number) {
+    case 0:
+      return "Mayflash Wii-U adapter";
+      break;
+    case 1:
+      return "vJoy";
+      break;
+    case 2:
+      return "raphnet v2.9 N64 adapter";
+      break;
+    case 3:
+      return "Xbox 360 compatible controller";
+      break;
+    case 4:
+      return "TigerGame 3-in-1";
+      break;
+    case 5:
+      return "Retrolink adapter";
+      break;
+    case 6:
+      return "raphnet v3.2+ N64 adapter";
+      break;
+    case 7:
+      return "Brook adapter";
+      break;
+    case 8:
+      return "PS4 controller";
+      break;
+    case 9:
+      return "Xbox 360 (Rock Candy) controller";
+      break;
+    default:
+      return "error: controller detected but not supported";
   }
 };
 
@@ -180,16 +207,22 @@ function fromCardinals([origx, origy], l, r, d,u) {
     return [[origx, origy], [l,origy], [r,origy], [origx,d], [origx, u]];
 };
 
+// parameters for GC controller simulation
 // the following function gives an approximation to the extreme raw axis data for a given controller
 // of course, this varies between controllers, but this serves as a useful first approximation
 // function output: [[origx, origy], [lx, ly], [rx, ry], [dx, dy], [ux, uy]]
 function axisDataFromIDNumber(number) {
-  if (number == 4) { // TigerGame 3-in-1
-    let orig = 0.05098;
-    return ( fromCardinals ( [orig, -orig], -0.7098, 0.85098, 0.73333, -0.8588) );
-  }
-  else {
-    return ( fromCardinals ( [0, 0], -0.75, 0.75, 0.75, -0.75) ); // default
+  switch (number) {
+    case 4 : // TigerGame 3-in-1
+      return ( fromCardinals ( [0.05, -0.05], -0.7, 0.85, 0.7, -0.85) );
+      break;
+    case 3: // XInput controllers
+    case 8: // PS4 controller    
+    case 9: // Rock Candy Xbox 360 controller
+      return ( fromCardinals ( [0, 0], -1, 1, 1, -1) );
+      break;
+    default:
+      return ( fromCardinals ( [0, 0], -0.75, 0.75, 0.75, -0.75) );
   }
 };
 
@@ -210,7 +243,7 @@ export function controllerIDNumberFromGamepadID(gamepadID) {
 // so that corners (l = left, r = right, d=down, u=up) are mapped to the respective corners of the unit square.
 // This function assumes that ALL coordinates have already been centered.
 // Return type: [xnew,ynew]
-export function renormaliseAxisInput([lx, ly], [rx, ry], [dx, dy], [ux, uy], [x, y]) {
+function renormaliseAxisInput([lx, ly], [rx, ry], [dx, dy], [ux, uy], [x, y]) {
   if ((x * ry - y * rx <= 0) && (x * uy - y * ux >= 0)) // quadrant 1
   {
     let invMat = inverseMatrix([
@@ -242,7 +275,7 @@ export function renormaliseAxisInput([lx, ly], [rx, ry], [dx, dy], [ux, uy], [x,
   }
 };
 
-// The following functions renormalise input to mimic GC controllers.
+
 
 // clamps a value between -1 and 1
 function toInterval (x) {
@@ -259,59 +292,9 @@ function toInterval (x) {
 
 
 
-// Melee GC controller simulation
-
-const steps = 80;
-const deadzoneConst = 0.28;
-
-// data courtesy of ARTIFICE
-// horizontal: 19 -- 122 -- 232
-const meleeXMin  = 19 ;
-const meleeXOrig = 122;
-const meleeXMax  = 232;
-// vertical  : 32 -- 134 -- 246
-const meleeYMin  = 32 ;
-const meleeYOrig = 134;
-const meleeYMax  = 246;
-
-// rescales -1 -- 0 -- 1 to min -- orig -- max, and rounds to nearest integer
-function discretise (x, min, orig, max) {
-  if (x < 0) {
-    return Math.round((x*(orig-min)+orig));
-  }
-  else if (x > 0) {
-    return Math.round((x*(max-orig)+orig));
-  }
-  else {
-    return orig;
-  }
-};
-
-// Analog sticks.
-
-// Rescales controller input to -1 -- 0 -- 1 in both axes
-function scaleToUnitAxes ( x,y, number, customCenterX, customCenterY ) { // number = gamepad ID number
-    let [[origx, origy], [lx, ly], [rx, ry], [dx, dy], [ux, uy]] = axisDataFromIDNumber(number);
-    origx += customCenterX;
-    origy += customCenterY;
-    let [xnew, ynew] = renormaliseAxisInput([lx-origx, ly-origy], [rx-origx, ry-origy], [dx-origx, dy-origy], [ux-origx, uy-origy], [x-origx, y-origy]);
-    return [toInterval(xnew), toInterval(ynew)];
-};
-
-// Rescales -1 -- 1 input to 0 -- 255 values to simulate a GC controller
-function scaleUnitToGCAxes (x, y) {
-  let xnew = discretise(x, meleeXMin, meleeXOrig, meleeXMax);
-  let ynew = discretise(y, meleeYMin, meleeYOrig, meleeYMax);
-  return [xnew, ynew];
-};
-
-// Rescales controller input to 0 -- 255 values to simulate a GC controller
-function scaleToGCAxes (x, y, number, customCenterX, customCenterY) {
-  let [xnew, ynew] = scaleToUnitAxes (x, y, number, customCenterX, customCenterY);
-  return scaleUnitToGCAxes(xnew, ynew);
-}
 
 // Analog triggers.
+
 // t = trigger input
 export function scaleToGCTrigger ( t, offset, scale ) {
     let tnew = (t+offset) * scale;
@@ -326,38 +309,70 @@ export function scaleToGCTrigger ( t, offset, scale ) {
     }
 };
 
+
+
+// ---------------------------
+// GC controller simulation
+
+const steps = 80;
+const deadzoneConst = 0.28;
+const leniency = 10;
+
+const meleeOrig = 128;
+const meleeMin  = meleeOrig - (steps+leniency) ; // lowest  0 -- 255 input the controller will give
+const meleeMax  = meleeOrig + (steps+leniency) ; // highest 0 -- 255 input the controller will give
+
+// rescales -1 -- 0 -- 1 to min -- orig -- max, and rounds to nearest integer
+function discretise (x, min, orig, max) {
+  if (x < 0) {
+    return Math.round((x*(orig-min)+orig));
+  }
+  else if (x > 0) {
+    return Math.round((x*(max-orig)+orig));
+  }
+  else {
+    return orig;
+  }
+};
+
+
+// Rescales controller input to -1 -- 0 -- 1 in both axes
+export function scaleToUnitAxes ( x,y, number, customCenterX, customCenterY ) { // number = gamepad ID number
+    let [[origx, origy], [lx, ly], [rx, ry], [dx, dy], [ux, uy]] = axisDataFromIDNumber(number);
+    origx += customCenterX;
+    origy += customCenterY;
+    let [xnew, ynew] = renormaliseAxisInput([lx-origx, ly-origy], [rx-origx, ry-origy], [dx-origx, dy-origy], [ux-origx, uy-origy], [x-origx, y-origy]);
+    return [toInterval(xnew), toInterval(ynew)];
+};
+
+// Rescales -1 -- 1 input to 0 -- 255 values to simulate a GC controller
+function scaleUnitToGCAxes (x, y) {
+  let xnew = discretise(x, meleeMin, meleeOrig, meleeMax);
+  let ynew = discretise(y, meleeMin, meleeOrig, meleeMax);
+  return ([xnew, ynew]);
+};
+
+// Rescales controller input to 0 -- 255 values to simulate a GC controller
+function scaleToGCAxes (x, y, number, customCenterX, customCenterY) {
+  let [xnew, ynew] = scaleToUnitAxes (x, y, number, customCenterX, customCenterY);
+  return scaleUnitToGCAxes(xnew, ynew);
+}
+
+
+// ---------------------------------
+// Melee input rescaling functions
+
+
 // basic mapping from 0 -- 255 back to -1 -- 1 done by Melee
 // boolean value: true = deadzones, false = no deadzones
-function axisRescale ( x, orig, bool) {
-    var magicOffset = 1; // don't ask
-    if ( ! bool) {
-      magicOffset = 0;
-    }
-  // the following line is equivalent to checking that the result of this function lies in the deadzone
-  // no need to check for deadzones later
-    if ( bool && Math.abs (x+magicOffset-orig) < deadzoneConst * steps) {
-      return 0;
-    }
-    else {
-      return (x-orig+magicOffset) / steps;
-    }
+function axisRescale ( x, orig = meleeOrig) {
+  return (x-orig) / steps;
 };
 
-function meleeXAxisLinearRescale (x, bool) {
-  return axisRescale ( x, meleeXOrig, bool );
-};
-
-function meleeYAxisLinearRescale (y, bool) {
-  return axisRescale ( y, meleeYOrig, bool );
-};
-
-function meleeAxesNonLinearRescale ( [x,y] ) {
+function unitRetract ( [x,y] ) {
   let norm = Math.sqrt(x*x + y*y);
   if (norm < 1) {
     return ([x,y]);
-  }
-  else if (Math.abs(y) <= Math.abs(x)/6){ // constants (norm < 1 above, 1/6 here) may not be proper
-    return ([toInterval(x),y]);
   }
   else {
     return ( [x/norm, y/norm]);
@@ -365,9 +380,18 @@ function meleeAxesNonLinearRescale ( [x,y] ) {
 };
 
 function meleeAxesRescale ( [x,y], bool ) {
-    let xnew = meleeXAxisLinearRescale (x, bool);
-    let ynew = meleeYAxisLinearRescale (y, bool);
-    return meleeAxesNonLinearRescale( [xnew, ynew]);
+    let xnew = axisRescale (x, meleeOrig, bool);
+    let ynew = axisRescale (y, meleeOrig, bool);
+    let [xnew2, ynew2] = unitRetract( [xnew, ynew] );
+    if (bool) {
+      if (Math.abs(xnew2) < deadzoneConst) {
+         xnew2 = 0;
+      }
+      if (Math.abs(ynew2) < deadzoneConst) {
+        ynew2 = 0;
+      }
+    }
+    return [xnew2, ynew2];
 }
 
 function meleeRound (x) {
@@ -380,8 +404,16 @@ function meleeRound (x) {
 // number : controller ID, to rescale axes dependent on controller raw input
 // bool == false means no deadzone, bool == true means deadzone
 export function scaleToMeleeAxes ( x, y, number, bool, customCenterX, customCenterY ) {
-    let [xnew, ynew] = scaleToGCAxes(x,y,number, customCenterX, customCenterY);
-    return (meleeAxesRescale ( [xnew, ynew], bool )).map(meleeRound);
+    if (number === 0 || number == 4 || number === 5 || number === 7) { // gamecube controllers
+         x = ( x-customCenterX+1)*255/2; // convert raw input to 0 -- 255 values in obvious way
+         y = (-y+customCenterY+1)*255/2; // y incurs a sign flip
+         //console.log("You are using raw GC controller data.");
+    }
+    else { // convert raw input to 0 -- 255 by GC controller simulation
+      [x, y] = scaleToGCAxes(x,y,number, customCenterX, customCenterY);
+      //console.log("You are using GC controller simulation.");
+    }
+    return (meleeAxesRescale ( [x,y], bool )).map(meleeRound);
 };
 
 // scales -1 -- 1 data to the data Melee uses for the simulation
@@ -389,8 +421,4 @@ export function scaleToMeleeAxes ( x, y, number, bool, customCenterX, customCent
 export function meleeRescale ( x, y, bool = false) {
     let [xnew, ynew] = scaleUnitToGCAxes (x, y);
     return (meleeAxesRescale ( [xnew, ynew], bool)).map(meleeRound);
-}
-
-export function dolphinRescale (x, y, bool = false) {
-    return meleeAxesRescale(x,y).map(meleeRound);
 }
